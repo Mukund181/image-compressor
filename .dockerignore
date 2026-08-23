@@ -1,0 +1,14 @@
+node_modules
+npm-debug.log
+temp_downloads
+.git
+.gitignore
+.github
+terraform
+ansible
+*.pem
+*.tfstate
+*.tfstate.backup
+deploy.sh
+deploy.ps1
+DEVOPS_GUIDE.md

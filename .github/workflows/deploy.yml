@@ -1,0 +1,57 @@
+name: CI/CD Pipeline - Docker Build & AWS Deployment
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  workflow_dispatch:
+
+jobs:
+  build-and-push-docker:
+    name: Build & Push Docker Image
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME || 'mukund181' }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and Push Docker Image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          tags: |
+            mukund181/image-compressor:latest
+            mukund181/image-compressor:${{ github.sha }}
+
+  deploy-to-aws-ec2:
+    name: Deploy Container to AWS EC2
+    needs: build-and-push-docker
+    if: ${{ secrets.EC2_HOST != '' && secrets.EC2_SSH_KEY != '' }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: SSH and redeploy latest container on EC2
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ubuntu
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            echo "Pulling latest Docker image..."
+            sudo docker pull mukund181/image-compressor:latest
+            echo "Restarting application container..."
+            sudo docker rm -f image-compressor-app || true
+            sudo docker run -d --name image-compressor-app --restart always -p 80:3000 mukund181/image-compressor:latest
+            echo "Deployment Complete!"

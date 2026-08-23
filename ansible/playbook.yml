@@ -1,0 +1,94 @@
+---
+- name: Deploy Image Compressor App to AWS EC2 Instance
+  hosts: webserver
+  become: yes
+  vars:
+    docker_image: "mukund181/image-compressor:latest"
+    container_name: "image-compressor-app"
+    app_port_host: 80
+    app_port_container: 3000
+
+  tasks:
+    - name: Update apt cache & install system prerequisites
+      apt:
+        name:
+          - apt-transport-https
+          - ca-certificates
+          - curl
+          - gnupg
+          - lsb-release
+          - git
+        state: present
+        update_cache: yes
+
+    - name: Create directory for Docker keyring
+      file:
+        path: /etc/apt/keyrings
+        state: directory
+        mode: '0755'
+
+    - name: Add Docker official GPG key
+      get_url:
+        url: https://download.docker.com/linux/ubuntu/gpg
+        dest: /etc/apt/keyrings/docker.asc
+        mode: '0644'
+
+    - name: Add Docker APT repository
+      apt_repository:
+        repo: "deb [arch=amd64 signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu {{ ansible_distribution_release }} stable"
+        state: present
+
+    - name: Install Docker Engine and Docker Compose
+      apt:
+        name:
+          - docker-ce
+          - docker-ce-cli
+          - containerd.io
+          - docker-buildx-plugin
+          - docker-compose-plugin
+        state: present
+        update_cache: yes
+
+    - name: Ensure Docker service is enabled and running
+      systemd:
+        name: docker
+        state: started
+        enabled: yes
+
+    - name: Add ubuntu user to docker group
+      user:
+        name: ubuntu
+        groups: docker
+        append: yes
+
+    - name: Pull latest Docker image from Docker Hub
+      command: docker pull {{ docker_image }}
+
+    - name: Check if existing app container is running
+      command: docker ps -a -q --filter name={{ container_name }}
+      register: existing_container
+
+    - name: Stop and remove old app container if it exists
+      command: docker rm -f {{ container_name }}
+      when: existing_container.stdout != ""
+
+    - name: Run Image Compressor Docker container
+      command: >
+        docker run -d 
+        --name {{ container_name }} 
+        --restart always 
+        -p {{ app_port_host }}:{{ app_port_container }} 
+        {{ docker_image }}
+
+    - name: Wait for App to be healthy and accessible
+      uri:
+        url: "http://localhost:{{ app_port_host }}"
+        status_code: 200
+      register: health_check
+      until: health_check.status == 200
+      retries: 10
+      delay: 3
+
+    - name: Output deployment confirmation
+      debug:
+        msg: "🎉 Deployment successful! App is running on http://{{ inventory_hostname }}"

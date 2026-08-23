@@ -1,0 +1,25 @@
+# Node dependencies
+node_modules/
+npm-debug.log*
+temp_downloads/
+
+# Environment files
+.env
+.env.local
+
+# Terraform files
+terraform/.terraform/
+terraform/*.tfstate
+terraform/*.tfstate.backup
+terraform/*.tfvars
+terraform/.terraform.lock.hcl
+terraform/ec2_key.pem
+
+# Ansible generated files & keys
+ansible/*.pem
+
+# OS & Editor files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

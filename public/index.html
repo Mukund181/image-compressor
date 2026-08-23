@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OptiCompress - Fast & Powerful Image Compressor</title>
+  <meta name="description" content="Compress JPEG, PNG, WebP, and AVIF images instantly while preserving maximum visual quality. Batch processing and custom dimension controls.">
+  <!-- Google Fonts: Outfit & Plus Jakarta Sans -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="app-background">
+    <div class="glow-orb orb-1"></div>
+    <div class="glow-orb orb-2"></div>
+  </div>
+
+  <div class="container">
+    <!-- Navbar / Header -->
+    <header class="header">
+      <div class="brand">
+        <div class="brand-icon">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="3" width="18" height="18" rx="5" ry="5"></rect>
+            <circle cx="8.5" cy="8.5" r="1.5"></circle>
+            <polyline points="21 15 16 10 5 21"></polyline>
+            <path d="M12 9v6m-3-3h6" stroke-dasharray="2 2" />
+          </svg>
+        </div>
+        <div class="brand-text">
+          <h1>OptiCompress <span class="badge-pro">PRO</span></h1>
+          <p>Ultra-fast client & server side image optimization</p>
+        </div>
+      </div>
+      <div class="header-stats" id="globalStats">
+        <div class="stat-box">
+          <span class="stat-value" id="totalSavedHeader">0 MB</span>
+          <span class="stat-label">Space Saved</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Workspace -->
+    <main class="workspace">
+
+      <!-- Settings Panel -->
+      <section class="card settings-card">
+        <div class="card-header">
+          <h2><span class="step-num">1</span> Compression Options</h2>
+          <span class="hint-text">Adjust settings before dropping files</span>
+        </div>
+
+        <div class="settings-grid">
+          <!-- Quality Slider -->
+          <div class="setting-group">
+            <div class="setting-label-row">
+              <label for="qualitySlider">Compression Quality</label>
+              <span class="quality-badge" id="qualityValue">80%</span>
+            </div>
+            <input type="range" id="qualitySlider" min="10" max="100" value="80" class="slider">
+            <div class="presets-row">
+              <button type="button" class="btn-chip" data-preset="50">Max Savings (50%)</button>
+              <button type="button" class="btn-chip active" data-preset="80">Balanced (80%)</button>
+              <button type="button" class="btn-chip" data-preset="92">High Quality (92%)</button>
+            </div>
+          </div>
+
+          <!-- Format Selection -->
+          <div class="setting-group">
+            <label for="formatSelect">Target Output Format</label>
+            <div class="select-wrapper">
+              <select id="formatSelect">
+                <option value="original" selected>Keep Original Format</option>
+                <option value="webp">WebP (Recommended - Smallest Size)</option>
+                <option value="jpeg">JPEG / JPG (Universal Compatibility)</option>
+                <option value="png">PNG (Lossless / Transparent)</option>
+                <option value="avif">AVIF (Next-Gen Ultra Compression)</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Optional Dimension Resize -->
+          <div class="setting-group full-width resize-group">
+            <div class="setting-label-row">
+              <label>Resize Dimensions (Optional)</label>
+              <label class="toggle-switch">
+                <input type="checkbox" id="enableResize">
+                <span class="toggle-slider"></span>
+                <span class="toggle-label">Enable Resize</span>
+              </label>
+            </div>
+            
+            <div class="resize-inputs disabled" id="resizeInputsRow">
+              <div class="input-field">
+                <span>Width (px)</span>
+                <input type="number" id="resizeWidth" placeholder="e.g. 1920" min="1" disabled>
+              </div>
+              <span class="resize-x">×</span>
+              <div class="input-field">
+                <span>Height (px)</span>
+                <input type="number" id="resizeHeight" placeholder="Auto" min="1" disabled>
+              </div>
+              <label class="checkbox-container">
+                <input type="checkbox" id="aspectRatioCheck" checked disabled>
+                <span>Maintain aspect ratio</span>
+              </label>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Upload Zone Card -->
+      <section class="card upload-card">
+        <div class="drop-zone" id="dropZone">
+          <input type="file" id="fileInput" multiple accept="image/*" class="file-input">
+          
+          <div class="drop-zone-content">
+            <div class="upload-icon-wrapper">
+              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="17 8 12 3 7 8"></polyline>
+                <line x1="12" y1="3" x2="12" y2="15"></line>
+              </svg>
+            </div>
+            <h3>Drop your images here or <span class="browse-link">Browse files</span></h3>
+            <p class="drop-hint">Supports PNG, JPG, JPEG, WEBP, AVIF, GIF up to 50MB per file</p>
+            <div class="badges-row">
+              <span class="tech-badge">Batch Processing</span>
+              <span class="tech-badge">Sharp Engine</span>
+              <span class="tech-badge">ZIP Export</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Progress / Loader Bar -->
+      <div class="loader-container hidden" id="loaderContainer">
+        <div class="loader-bar-bg">
+          <div class="loader-bar-fill" id="loaderFill"></div>
+        </div>
+        <p class="loader-text" id="loaderText">Compressing images...</p>
+      </div>
+
+      <!-- Results & Downloads Section -->
+      <section class="card results-card hidden" id="resultsCard">
+        <div class="results-header">
+          <div class="results-summary">
+            <h2>Compressed Output (<span id="fileCountText">0</span> files)</h2>
+            <div class="summary-stats">
+              <span class="stat-pill"><strong id="totalOrigSize">0 MB</strong> original</span>
+              <span class="arrow-right">→</span>
+              <span class="stat-pill highlight"><strong id="totalCompSize">0 MB</strong> compressed</span>
+              <span class="badge-saving" id="totalSaveBadge">-0%</span>
+            </div>
+          </div>
+
+          <div class="results-actions">
+            <button class="btn btn-secondary" id="clearAllBtn">Clear All</button>
+            <button class="btn btn-primary" id="downloadZipBtn">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="7 10 12 15 17 10"></polyline>
+                <line x1="12" y1="15" x2="12" y2="3"></line>
+              </svg>
+              Download All (ZIP)
+            </button>
+          </div>
+        </div>
+
+        <!-- File Items List -->
+        <div class="file-list" id="fileList"></div>
+      </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+      <p>Powered by Node.js & Sharp Image Engine • High quality lossy & lossless image compression</p>
+    </footer>
+  </div>
+
+  <!-- Image Modal Preview -->
+  <div class="modal hidden" id="previewModal">
+    <div class="modal-overlay" id="modalOverlay"></div>
+    <div class="modal-content">
+      <button class="modal-close" id="modalCloseBtn">&times;</button>
+      <img id="modalImg" src="" alt="Full Preview">
+      <div class="modal-caption" id="modalCaption"></div>
+    </div>
+  </div>
+
+  <script src="js/app.js"></script>
+</body>
+</html>
