@@ -64,31 +64,38 @@ jobs:
             mukund181/image-compressor:${{ github.sha }}
 
   deploy-to-aws-ec2:
-    name: Deploy Container to AWS EC2
+    name: Deploy Container via Ansible to AWS EC2
     needs: build-and-push-docker
     if: needs.build-and-push-docker.outputs.pushed == 'true'
     runs-on: ubuntu-latest
-    env:
-      EC2_HOST: ${{ secrets.EC2_HOST }}
-      EC2_SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
     steps:
-      - name: SSH and deploy the image tested in this run
-        if: env.EC2_HOST != '' && env.EC2_SSH_KEY != ''
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ env.EC2_HOST }}
-          username: ubuntu
-          key: ${{ env.EC2_SSH_KEY }}
-          script: |
-            set -eu
-            sudo test -f /opt/omnitools/app.env
-            sudo docker pull mukund181/image-compressor:${{ github.sha }}
-            sudo docker rm -f image-compressor-app || true
-            sudo docker run -d --name image-compressor-app --restart always -p 80:3000 --env-file /opt/omnitools/app.env -e NODE_ENV=production -e PORT=3000 -v omnitools-downloads:/usr/src/app/temp_downloads mukund181/image-compressor:${{ github.sha }}
-            for attempt in $(seq 1 30); do
-              status=$(sudo docker inspect --format '{{.State.Health.Status}}' image-compressor-app)
-              if [ "$status" = "healthy" ]; then exit 0; fi
-              if [ "$status" = "unhealthy" ]; then exit 1; fi
-              sleep 5
-            done
-            exit 1
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up SSH Private Key
+        run: |
+          mkdir -p terraform
+          echo "${{ secrets.EC2_SSH_KEY }}" > terraform/ec2_key.pem
+          chmod 600 terraform/ec2_key.pem
+
+      - name: Configure Production Environment File
+        run: |
+          if [ -n "${{ secrets.APP_ENV }}" ]; then
+            echo "${{ secrets.APP_ENV }}" > .env
+          elif [ ! -f .env ] && [ -f .env.example ]; then
+            cp .env.example .env
+          fi
+
+      - name: Configure EC2 IP in Ansible Inventory
+        run: |
+          EC2_IP="${{ secrets.EC2_HOST }}"
+          if [ -n "$EC2_IP" ]; then
+            echo "[webserver]" > ansible/inventory.ini
+            echo "$EC2_IP ansible_user=ubuntu ansible_ssh_private_key_file=../terraform/ec2_key.pem ansible_ssh_common_args='-o StrictHostKeyChecking=no'" >> ansible/inventory.ini
+          fi
+          cat ansible/inventory.ini
+
+      - name: Run Ansible Playbook
+        run: |
+          cd ansible
+          ansible-playbook -i inventory.ini playbook.yml -e "docker_image=mukund181/image-compressor:${{ github.sha }}"
