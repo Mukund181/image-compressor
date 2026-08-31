@@ -20,8 +20,8 @@ variable "aws_secret_key" {
 
 variable "instance_type" {
   type        = string
-  default     = "t2.micro"
-  description = "EC2 Instance type (Free Tier eligible: t2.micro or t3.micro)"
+  default     = "t3.micro"
+  description = "EC2 Instance type (Free Tier eligible in ap-south-1: t3.micro)"
 }
 
 variable "key_name" {

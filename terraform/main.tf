@@ -106,7 +106,7 @@ resource "aws_instance" "web_server" {
 resource "local_file" "ansible_inventory" {
   content = templatefile("${path.module}/inventory.tmpl", {
     ec2_public_ip = aws_instance.web_server.public_ip
-    pem_path      = "${path.module}/ec2_key.pem"
+    pem_path      = "../terraform/ec2_key.pem"
   })
   filename = "${path.module}/../ansible/inventory.ini"
 }

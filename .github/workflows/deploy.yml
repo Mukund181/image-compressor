@@ -2,36 +2,63 @@ name: CI/CD Pipeline - Docker Build & AWS Deployment
 
 on:
   push:
-    branches:
-      - main
-      - master
+    branches: [main, master]
+  pull_request:
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci --include=optional
+      - name: Install document conversion runtime
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends libreoffice-writer fonts-noto-core fonts-noto-color-emoji
+      - run: npm run check
+      - run: npm test
+        env:
+          NODE_ENV: test
+
   build-and-push-docker:
     name: Build & Push Docker Image
+    needs: test
     runs-on: ubuntu-latest
-
+    outputs:
+      pushed: ${{ steps.publish.outputs.enabled }}
+    env:
+      DOCKER_TOKEN: ${{ secrets.DOCKERHUB_TOKEN || secrets.DOCKERHUB_PASSWORD }}
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - name: Determine whether publishing is configured
+        id: publish
+        run: |
+          if [ -n "$DOCKER_TOKEN" ] && [ "$EVENT_NAME" != "pull_request" ]; then
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+          fi
+        env:
+          EVENT_NAME: ${{ github.event_name }}
       - name: Log in to Docker Hub
-        if: ${{ secrets.DOCKERHUB_TOKEN != '' || secrets.DOCKERHUB_PASSWORD != '' }}
+        if: steps.publish.outputs.enabled == 'true'
         uses: docker/login-action@v3
         with:
           username: mukund181
-          password: ${{ secrets.DOCKERHUB_TOKEN || secrets.DOCKERHUB_PASSWORD }}
-
-      - name: Build and Push Docker Image
-        uses: docker/build-push-action@v5
+          password: ${{ env.DOCKER_TOKEN }}
+      - name: Build and optionally publish
+        uses: docker/build-push-action@v6
         with:
           context: .
           file: ./Dockerfile
-          push: ${{ secrets.DOCKERHUB_TOKEN != '' || secrets.DOCKERHUB_PASSWORD != '' }}
+          push: ${{ steps.publish.outputs.enabled == 'true' }}
           tags: |
             mukund181/image-compressor:latest
             mukund181/image-compressor:${{ github.sha }}
@@ -39,20 +66,29 @@ jobs:
   deploy-to-aws-ec2:
     name: Deploy Container to AWS EC2
     needs: build-and-push-docker
-    if: ${{ secrets.EC2_HOST != '' && secrets.EC2_SSH_KEY != '' }}
+    if: needs.build-and-push-docker.outputs.pushed == 'true'
     runs-on: ubuntu-latest
-
+    env:
+      EC2_HOST: ${{ secrets.EC2_HOST }}
+      EC2_SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
     steps:
-      - name: SSH and redeploy latest container on EC2
+      - name: SSH and deploy the image tested in this run
+        if: env.EC2_HOST != '' && env.EC2_SSH_KEY != ''
         uses: appleboy/ssh-action@v1.0.3
         with:
-          host: ${{ secrets.EC2_HOST }}
+          host: ${{ env.EC2_HOST }}
           username: ubuntu
-          key: ${{ secrets.EC2_SSH_KEY }}
+          key: ${{ env.EC2_SSH_KEY }}
           script: |
-            echo "Pulling latest Docker image..."
-            sudo docker pull mukund181/image-compressor:latest
-            echo "Restarting application container..."
+            set -eu
+            sudo test -f /opt/omnitools/app.env
+            sudo docker pull mukund181/image-compressor:${{ github.sha }}
             sudo docker rm -f image-compressor-app || true
-            sudo docker run -d --name image-compressor-app --restart always -p 80:3000 mukund181/image-compressor:latest
-            echo "Deployment Complete!"
+            sudo docker run -d --name image-compressor-app --restart always -p 80:3000 --env-file /opt/omnitools/app.env -e NODE_ENV=production -e PORT=3000 -v omnitools-downloads:/usr/src/app/temp_downloads mukund181/image-compressor:${{ github.sha }}
+            for attempt in $(seq 1 30); do
+              status=$(sudo docker inspect --format '{{.State.Health.Status}}' image-compressor-app)
+              if [ "$status" = "healthy" ]; then exit 0; fi
+              if [ "$status" = "unhealthy" ]; then exit 1; fi
+              sleep 5
+            done
+            exit 1

@@ -1,57 +1,24 @@
 #!/usr/bin/env bash
-set -e
+set -euo pipefail
 
-echo "=================================================="
-echo "🚀 OptiCompress DevOps Automated Deployment Pipeline"
-echo "=================================================="
+# Run only when you intend to provision or update AWS resources.
+for tool in terraform ansible-playbook; do
+    command -v "$tool" >/dev/null || { echo "$tool is required before deployment." >&2; exit 1; }
+done
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+test -f "$SCRIPT_DIR/.env" || { echo "Create .env with production settings and a strong JWT_SECRET first." >&2; exit 1; }
 
-# Check AWS Credentials
-if [ -z "$AWS_ACCESS_KEY_ID" ] || [ -z "$AWS_SECRET_ACCESS_KEY" ]; then
-    echo "⚠️  AWS credentials not detected in environment."
-    read -p "Enter AWS Access Key ID: " AWS_ACCESS_KEY_ID
-    read -p "Enter AWS Secret Access Key: " AWS_SECRET_ACCESS_KEY
-    export AWS_ACCESS_KEY_ID
-    export AWS_SECRET_ACCESS_KEY
-fi
-
+# Terraform uses AWS environment credentials, profiles, or instance roles.
+# Never pass secret values through command-line arguments.
 AWS_REGION="${AWS_REGION:-us-east-1}"
 export AWS_REGION
-
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-
-# Step 1: Terraform
-echo ""
-echo "📦 [1/3] Provisioning AWS EC2 Infrastructure via Terraform..."
 cd "$SCRIPT_DIR/terraform"
-
 terraform init
-terraform apply -auto-approve \
-  -var="aws_region=$AWS_REGION" \
-  -var="aws_access_key=$AWS_ACCESS_KEY_ID" \
-  -var="aws_secret_key=$AWS_SECRET_ACCESS_KEY"
-
+terraform apply -auto-approve -var="aws_region=$AWS_REGION"
 EC2_IP=$(terraform output -raw ec2_public_ip)
+chmod 600 "$SCRIPT_DIR/terraform/ec2_key.pem"
 
-echo ""
-echo "✅ EC2 Instance Provisioned! Public IP: $EC2_IP"
-
-# Step 2: Ansible
-echo ""
-echo "⚙️  [2/3] Configuring Server & Deploying Docker Container via Ansible..."
 cd "$SCRIPT_DIR/ansible"
-
-# Fix SSH key permissions
-chmod 600 "$SCRIPT_DIR/terraform/ec2_key.pem" || true
-
-# Wait 15 seconds for SSH to become ready on AWS
-echo "Waiting for SSH connection to become ready..."
-sleep 15
-
+# The playbook waits for SSH readiness before configuring the instance.
 ansible-playbook -i inventory.ini playbook.yml
-
-echo ""
-echo "=================================================="
-echo "🎉 DEPLOYMENT COMPLETE!"
-echo "Application URL: http://$EC2_IP"
-echo "SSH Access: ssh -i $SCRIPT_DIR/terraform/ec2_key.pem ubuntu@$EC2_IP"
-echo "=================================================="
+echo "Deployment complete: http://$EC2_IP"

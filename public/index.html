@@ -3,193 +3,289 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>OptiCompress - Fast & Powerful Image Compressor</title>
-  <meta name="description" content="Compress JPEG, PNG, WebP, and AVIF images instantly while preserving maximum visual quality. Batch processing and custom dimension controls.">
-  <!-- Google Fonts: Outfit & Plus Jakarta Sans -->
+  <title>OmniTools - All-in-One Image, Video, PDF & URL Utility Suite</title>
+  <meta name="description" content="Fast, secure, and easy-to-use digital tools for compressing images and videos, converting PDF to Word, and shortening links.">
+  <!-- Google Fonts: Outfit & Inter -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-  <div class="app-background">
-    <div class="glow-orb orb-1"></div>
-    <div class="glow-orb orb-2"></div>
-  </div>
-
-  <div class="container">
-    <!-- Navbar / Header -->
-    <header class="header">
+  <!-- Light Header Navigation -->
+  <header class="navbar">
+    <div class="nav-container">
       <div class="brand">
-        <div class="brand-icon">
-          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-            <rect x="3" y="3" width="18" height="18" rx="5" ry="5"></rect>
-            <circle cx="8.5" cy="8.5" r="1.5"></circle>
-            <polyline points="21 15 16 10 5 21"></polyline>
-            <path d="M12 9v6m-3-3h6" stroke-dasharray="2 2" />
+        <div class="brand-logo">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
+            <polyline points="2 17 12 22 22 17"></polyline>
+            <polyline points="2 12 12 17 22 12"></polyline>
           </svg>
         </div>
-        <div class="brand-text">
-          <h1>OptiCompress <span class="badge-pro">PRO</span></h1>
-          <p>Ultra-fast client & server side image optimization</p>
+        <span class="brand-name">OmniTools</span>
+      </div>
+
+      <nav class="nav-links">
+        <button class="nav-tab active" data-tab="image">🖼️ Image Tool</button>
+        <button class="nav-tab" data-tab="video">🎥 Video Tool</button>
+        <button class="nav-tab" data-tab="pdf">📄 PDF Converter</button>
+        <button class="nav-tab" data-tab="shortener">🔗 URL Shortener</button>
+      </nav>
+
+      <div class="nav-right">
+        <div class="usage-badge" id="usageBadge">
+          <span class="badge-dot"></span>
+          <span id="usageText">Guest Quota: 5/5 left</span>
+        </div>
+        <div id="userAuthSection">
+          <button class="btn btn-outline btn-sm" id="openAuthBtn">Sign In</button>
         </div>
       </div>
-      <div class="header-stats" id="globalStats">
-        <div class="stat-box">
-          <span class="stat-value" id="totalSavedHeader">0 MB</span>
-          <span class="stat-label">Space Saved</span>
+    </div>
+  </header>
+
+  <!-- Hero Section -->
+  <section class="hero-section">
+    <div class="hero-content">
+      <h1 id="heroTitle">Simple, Powerful Digital Utilities</h1>
+      <p id="heroSubtitle">Compress images & videos, convert documents, and shorten links in seconds.</p>
+    </div>
+  </section>
+
+  <!-- Main Workspaces Container -->
+  <main class="main-container">
+
+    <!-- MODULE 1: IMAGE COMPRESSOR & CONVERTER -->
+    <div class="tool-panel active" id="panel-image">
+      <div class="card settings-card">
+        <div class="card-title-row">
+          <h2>Compression Settings</h2>
         </div>
-      </div>
-    </header>
-
-    <!-- Main Workspace -->
-    <main class="workspace">
-
-      <!-- Settings Panel -->
-      <section class="card settings-card">
-        <div class="card-header">
-          <h2><span class="step-num">1</span> Compression Options</h2>
-          <span class="hint-text">Adjust settings before dropping files</span>
-        </div>
-
         <div class="settings-grid">
-          <!-- Quality Slider -->
-          <div class="setting-group">
-            <div class="setting-label-row">
-              <label for="qualitySlider">Compression Quality</label>
-              <span class="quality-badge" id="qualityValue">80%</span>
+          <div class="setting-item">
+            <div class="setting-label">
+              <label for="imgQuality">Image Quality</label>
+              <span class="value-chip" id="imgQualityValue">80 / 100</span>
             </div>
-            <input type="range" id="qualitySlider" min="10" max="100" value="80" class="slider">
-            <div class="presets-row">
-              <button type="button" class="btn-chip" data-preset="50">Max Savings (50%)</button>
-              <button type="button" class="btn-chip active" data-preset="80">Balanced (80%)</button>
-              <button type="button" class="btn-chip" data-preset="92">High Quality (92%)</button>
+            <input type="range" id="imgQuality" min="10" max="100" value="80" class="slider" aria-describedby="imgQualityHelp">
+            <div class="preset-buttons">
+              <button class="chip-btn" data-val="35">Max Savings</button>
+              <button class="chip-btn active" data-val="80">Balanced</button>
+              <button class="chip-btn" data-val="92">High Quality</button>
             </div>
+            <p class="setting-help" id="imgQualityHelp">Lower quality makes smaller files with more detail loss. PNG uses fewer colours below 90 and lossless encoding at 90–100. Dimensions stay unchanged.</p>
           </div>
 
-          <!-- Format Selection -->
-          <div class="setting-group">
-            <label for="formatSelect">Target Output Format</label>
-            <div class="select-wrapper">
-              <select id="formatSelect">
-                <option value="original" selected>Keep Original Format</option>
-                <option value="webp">WebP (Recommended - Smallest Size)</option>
-                <option value="jpeg">JPEG / JPG (Universal Compatibility)</option>
-                <option value="png">PNG (Lossless / Transparent)</option>
-                <option value="avif">AVIF (Next-Gen Ultra Compression)</option>
-              </select>
-            </div>
-          </div>
-
-          <!-- Optional Dimension Resize -->
-          <div class="setting-group full-width resize-group">
-            <div class="setting-label-row">
-              <label>Resize Dimensions (Optional)</label>
-              <label class="toggle-switch">
-                <input type="checkbox" id="enableResize">
-                <span class="toggle-slider"></span>
-                <span class="toggle-label">Enable Resize</span>
-              </label>
-            </div>
-            
-            <div class="resize-inputs disabled" id="resizeInputsRow">
-              <div class="input-field">
-                <span>Width (px)</span>
-                <input type="number" id="resizeWidth" placeholder="e.g. 1920" min="1" disabled>
-              </div>
-              <span class="resize-x">×</span>
-              <div class="input-field">
-                <span>Height (px)</span>
-                <input type="number" id="resizeHeight" placeholder="Auto" min="1" disabled>
-              </div>
-              <label class="checkbox-container">
-                <input type="checkbox" id="aspectRatioCheck" checked disabled>
-                <span>Maintain aspect ratio</span>
-              </label>
-            </div>
+          <div class="setting-item">
+            <label for="imgFormat">Output Format</label>
+            <select id="imgFormat" class="select-input">
+              <option value="original" selected>Keep Original Format</option>
+              <option value="webp">WebP (Smaller Files)</option>
+              <option value="jpeg">JPEG (Universal)</option>
+              <option value="png">PNG (Supports Transparency)</option>
+              <option value="avif">AVIF (Next-Gen)</option>
+            </select>
+            <p class="setting-help">Try WebP or AVIF for greater savings. This slider is a quality score, not a promised reduction. Settings apply to your next upload.</p>
           </div>
         </div>
-      </section>
-
-      <!-- Upload Zone Card -->
-      <section class="card upload-card">
-        <div class="drop-zone" id="dropZone">
-          <input type="file" id="fileInput" multiple accept="image/*" class="file-input">
-          
-          <div class="drop-zone-content">
-            <div class="upload-icon-wrapper">
-              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                <polyline points="17 8 12 3 7 8"></polyline>
-                <line x1="12" y1="3" x2="12" y2="15"></line>
-              </svg>
-            </div>
-            <h3>Drop your images here or <span class="browse-link">Browse files</span></h3>
-            <p class="drop-hint">Supports PNG, JPG, JPEG, WEBP, AVIF, GIF up to 50MB per file</p>
-            <div class="badges-row">
-              <span class="tech-badge">Batch Processing</span>
-              <span class="tech-badge">Sharp Engine</span>
-              <span class="tech-badge">ZIP Export</span>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- Progress / Loader Bar -->
-      <div class="loader-container hidden" id="loaderContainer">
-        <div class="loader-bar-bg">
-          <div class="loader-bar-fill" id="loaderFill"></div>
-        </div>
-        <p class="loader-text" id="loaderText">Compressing images...</p>
       </div>
 
-      <!-- Results & Downloads Section -->
-      <section class="card results-card hidden" id="resultsCard">
-        <div class="results-header">
-          <div class="results-summary">
-            <h2>Compressed Output (<span id="fileCountText">0</span> files)</h2>
-            <div class="summary-stats">
-              <span class="stat-pill"><strong id="totalOrigSize">0 MB</strong> original</span>
-              <span class="arrow-right">→</span>
-              <span class="stat-pill highlight"><strong id="totalCompSize">0 MB</strong> compressed</span>
-              <span class="badge-saving" id="totalSaveBadge">-0%</span>
-            </div>
-          </div>
-
-          <div class="results-actions">
-            <button class="btn btn-secondary" id="clearAllBtn">Clear All</button>
-            <button class="btn btn-primary" id="downloadZipBtn">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                <polyline points="7 10 12 15 17 10"></polyline>
-                <line x1="12" y1="15" x2="12" y2="3"></line>
+      <div class="card drop-card">
+        <div class="drop-zone" id="imgDropZone">
+          <input type="file" id="imgInput" multiple accept=".png,.jpg,.jpeg,.webp,.avif" aria-label="Choose images" class="hidden-input">
+          <div class="drop-content">
+            <div class="drop-icon blue">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="3" width="18" height="18" rx="5"></rect>
+                <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                <polyline points="21 15 16 10 5 21"></polyline>
               </svg>
-              Download All (ZIP)
-            </button>
+            </div>
+            <h3>Drop your images here or <span class="text-primary">Choose Files</span></h3>
+            <p>Up to 20 still PNG, JPG, WebP or AVIF images, 50 MB each</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="card results-card hidden" id="imgResultsCard">
+        <div class="results-top">
+          <h3>Compressed Images (<span id="imgCount">0</span>)</h3>
+          <div class="results-buttons">
+            <button class="btn btn-secondary btn-sm" id="imgClearBtn">Clear</button>
+            <button class="btn btn-primary btn-sm" id="imgZipBtn">Download All (ZIP)</button>
+          </div>
+        </div>
+        <div class="results-list" id="imgList"></div>
+      </div>
+    </div>
+
+    <!-- MODULE 2: VIDEO COMPRESSOR -->
+    <div class="tool-panel" id="panel-video">
+      <div class="card drop-card">
+        <div class="drop-zone" id="videoDropZone">
+          <input type="file" id="videoInput" accept="video/*" class="hidden-input">
+          <div class="drop-content">
+            <div class="drop-icon purple">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polygon points="23 7 16 12 23 17 23 7"></polygon>
+                <rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect>
+              </svg>
+            </div>
+            <h3>Drop your video here or <span class="text-primary">Browse Video</span></h3>
+            <p>Compress MP4, MOV, WebM videos while maintaining clarity</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="card results-card hidden" id="videoResultsCard">
+        <h3>Compressed Video</h3>
+        <div class="file-item-box" id="videoResultBox"></div>
+      </div>
+    </div>
+
+    <!-- MODULE 4: PDF CONVERTER -->
+    <div class="tool-panel" id="panel-pdf">
+      <div class="tab-sub-nav">
+        <button class="sub-tab active" id="tabPdfToWord">PDF to Word (.docx)</button>
+        <button class="sub-tab" id="tabWordToPdf">Word (.docx) to PDF</button>
+      </div>
+
+      <!-- PDF to Word -->
+      <div class="card drop-card" id="pdfToWordCard">
+        <div class="drop-zone" id="pdfDropZone">
+          <input type="file" id="pdfInput" accept=".pdf" class="hidden-input">
+          <div class="drop-content">
+            <div class="drop-icon red">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                <polyline points="14 2 14 8 20 8"></polyline>
+              </svg>
+            </div>
+            <h3>Drop your PDF file here or <span class="text-primary">Select PDF</span></h3>
+            <p>Extract PDF text into Word (.docx), up to 20 MB. Scans and original layout are not supported.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Word (.docx) to PDF -->
+      <div class="card drop-card hidden" id="wordToPdfCard">
+        <div class="drop-zone" id="wordDropZone">
+          <input type="file" id="wordInput" accept=".docx,.txt" aria-label="Choose Word or text file" class="hidden-input">
+          <div class="drop-content">
+            <div class="drop-icon blue">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                <polyline points="14 2 14 8 20 8"></polyline>
+                <line x1="16" y1="13" x2="8" y2="13"></line>
+                <line x1="16" y1="17" x2="8" y2="17"></line>
+                <polyline points="10 9 9 9 8 9"></polyline>
+              </svg>
+            </div>
+            <h3>Drop your Word (.docx) file here or <span class="text-primary">Select Word File</span></h3>
+            <p>Convert DOCX or UTF-8 text to PDF, up to 20 MB. LibreOffice preserves Word formatting and Unicode text when installed.</p>
           </div>
         </div>
 
-        <!-- File Items List -->
-        <div class="file-list" id="fileList"></div>
-      </section>
+        <div style="margin-top: 1.5rem; border-top: 1px solid var(--border-color, #e2e8f0); padding-top: 1.2rem;">
+          <details style="cursor: pointer;">
+            <summary style="font-weight: 600; font-size: 0.9rem; color: #475569; margin-bottom: 0.8rem;">Or type / paste text directly to generate PDF</summary>
+            <div class="form-group" style="margin-top: 0.8rem;">
+              <textarea id="pdfTextInput" rows="5" class="textarea-input" placeholder="Type or paste text content here to generate a formatted PDF document..."></textarea>
+            </div>
+            <button class="btn btn-primary btn-sm" id="generatePdfBtn">Generate PDF from Text</button>
+          </details>
+        </div>
+      </div>
 
-    </main>
+      <div class="card results-card hidden" id="pdfResultsCard">
+        <h3>Converted Document</h3>
+        <div class="file-item-box" id="pdfResultBox"></div>
+      </div>
+    </div>
 
-    <!-- Footer -->
-    <footer class="footer">
-      <p>Powered by Node.js & Sharp Image Engine • High quality lossy & lossless image compression</p>
-    </footer>
-  </div>
+    <!-- MODULE 5: SMART URL SHORTENER -->
+    <div class="tool-panel" id="panel-shortener">
+      <div class="card settings-card">
+        <h2>Shorten Long Web Links</h2>
+        <p class="subtitle-text">Create clean, short links for sharing across social media and messaging.</p>
 
-  <!-- Image Modal Preview -->
-  <div class="modal hidden" id="previewModal">
-    <div class="modal-overlay" id="modalOverlay"></div>
-    <div class="modal-content">
-      <button class="modal-close" id="modalCloseBtn">&times;</button>
-      <img id="modalImg" src="" alt="Full Preview">
-      <div class="modal-caption" id="modalCaption"></div>
+        <form id="urlForm" class="url-form">
+          <div class="form-group">
+            <label for="longUrlInput">Target Web URL</label>
+            <input type="url" id="longUrlInput" required placeholder="https://example.com/very-long-link-path-here" class="text-input">
+          </div>
+
+          <div class="form-group">
+            <label for="customAliasInput">Custom Alias (Optional)</label>
+            <input type="text" id="customAliasInput" maxlength="64" pattern="[a-zA-Z0-9_-]+" placeholder="e.g. my-awesome-link" class="text-input">
+          </div>
+
+          <button type="submit" class="btn btn-primary">Create Short Link</button>
+        </form>
+
+        <div class="shortener-result hidden" id="urlResultBox">
+          <div class="result-label">Your Shortened Link:</div>
+          <div class="short-url-row">
+            <input type="text" id="shortUrlOutput" readonly class="text-input">
+            <button class="btn btn-secondary" id="copyUrlBtn">Copy Link</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- AUTH MODAL (Login / Register) -->
+  <div class="modal hidden" id="authModal">
+    <div class="modal-backdrop" id="authBackdrop"></div>
+    <div class="modal-card">
+      <button class="modal-close" id="closeAuthModal">&times;</button>
+
+      <div class="auth-header">
+        <h2 id="authModalTitle">Sign In to OmniTools</h2>
+        <p id="authModalSubtitle">Create a free account to unlock unlimited file processing and cloud storage.</p>
+      </div>
+
+      <div class="auth-tabs">
+        <button class="auth-tab active" id="tabLoginBtn">Sign In</button>
+        <button class="auth-tab" id="tabRegisterBtn">Create Free Account</button>
+      </div>
+
+      <!-- Login Form -->
+      <form id="loginForm" class="auth-form">
+        <div class="form-group">
+          <label>Email Address</label>
+          <input type="email" id="loginEmail" required class="text-input" placeholder="you@example.com">
+        </div>
+        <div class="form-group">
+          <label>Password</label>
+          <input type="password" id="loginPassword" required class="text-input" placeholder="••••••••">
+        </div>
+        <button type="submit" class="btn btn-primary full-width">Sign In</button>
+      </form>
+
+      <!-- Register Form -->
+      <form id="registerForm" class="auth-form hidden">
+        <div class="form-group">
+          <label>Full Name</label>
+          <input type="text" id="regName" required class="text-input" placeholder="John Doe">
+        </div>
+        <div class="form-group">
+          <label>Email Address</label>
+          <input type="email" id="regEmail" required class="text-input" placeholder="you@example.com">
+        </div>
+        <div class="form-group">
+          <label>Password</label>
+          <input type="password" id="regPassword" required minlength="6" class="text-input" placeholder="At least 6 characters">
+        </div>
+        <button type="submit" class="btn btn-primary full-width">Create Free Account</button>
+      </form>
     </div>
   </div>
+
+  <!-- Global Toast / Alert Notifications -->
+  <div class="toast-container" id="toastContainer"></div>
 
   <script src="js/app.js"></script>
 </body>
