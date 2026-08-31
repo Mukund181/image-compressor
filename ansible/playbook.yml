@@ -54,7 +54,7 @@
 
     - name: Add Docker APT repository
       apt_repository:
-        repo: 'deb [arch=amd64 signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu {{ ansible_distribution_release }} stable'
+        repo: "deb [arch=amd64 signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu {{ ansible_facts['distribution_release'] }} stable"
         state: present
 
     - name: Install Docker Engine and Docker Compose
@@ -68,11 +68,29 @@
         state: present
         update_cache: yes
 
+    - name: Stop conflicting snap docker or stale services if present
+      shell: |
+        systemctl stop snap.docker.dockerd 2>/dev/null || true
+        systemctl reset-failed docker containerd 2>/dev/null || true
+      failed_when: false
+
+    - name: Ensure containerd is enabled and running
+      systemd:
+        name: containerd
+        state: started
+        enabled: yes
+        daemon_reload: yes
+
     - name: Ensure Docker service is enabled and running
       systemd:
         name: docker
-        state: started
+        state: restarted
         enabled: yes
+        daemon_reload: yes
+
+    - name: Verify Docker is functional
+      command: docker info
+      changed_when: false
 
     - name: Add ubuntu user to docker group
       user:
